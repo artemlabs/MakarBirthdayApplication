@@ -2,6 +2,8 @@ package fr.melnyk.makarbirthdayapplication
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -16,6 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import fr.melnyk.makarbirthdayapplication.ui.theme.MakarBirthdayApplicationTheme
 
 class MainActivity : ComponentActivity() {
+    private var isWifiConnected by mutableStateOf(false)
+    private var isMobileConnected by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -25,15 +30,40 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val connectivityManager =
-                        getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                    val isWifiConn = isNetworkConnected(connectivityManager, ConnectivityManager.TYPE_WIFI)
-                    val isMobileConn = isNetworkConnected(connectivityManager, ConnectivityManager.TYPE_MOBILE)
-
-                    Greeting("Android", isWifiConn, isMobileConn)
+                    Greeting("Android", isWifiConnected, isMobileConnected)
                 }
             }
         }
+
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        // Initial network status check
+        checkNetworkStatus(connectivityManager)
+
+        // Register a NetworkCallback to listen for network changes
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities
+            ) {
+                checkNetworkStatus(connectivityManager)
+            }
+
+            override fun onLost(network: Network) {
+                checkNetworkStatus(connectivityManager)
+            }
+        }
+
+        val networkRequest = android.net.NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+    }
+
+    private fun checkNetworkStatus(connectivityManager: ConnectivityManager) {
+        isWifiConnected = isNetworkConnected(connectivityManager, ConnectivityManager.TYPE_WIFI)
+        isMobileConnected = isNetworkConnected(connectivityManager, ConnectivityManager.TYPE_MOBILE)
     }
 
     private fun isNetworkConnected(connectivityManager: ConnectivityManager, networkType: Int): Boolean {
