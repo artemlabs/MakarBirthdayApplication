@@ -76,9 +76,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(name: String, isWifiConnected: Boolean, isMobileConnected: Boolean) {
     Text(
-        text = "Hello $name! You are connected to:\n" +
-                (if (isWifiConnected) "Wi-Fi\n" else "") +
-                (if (isMobileConnected) "Mobile Network\n" else ""),
+        text = "Hello $name!\n" +
+                (if (isWifiConnected) "You are connected to: Wi-Fi\n" else "") +
+                (if (isMobileConnected) "You are connected to: Mobile Network\n" else "") +
+                (if (!isMobileConnected && !isWifiConnected) "You are disconnected :)\n" else "") ,
         modifier = Modifier
     )
 }
